@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Defines the list of shapefiles based on user's directory content
-    const files = [
-        '09mun.shp',
+    // Lista de archivos interactivos (sin el archivo base 09mun)
+    const interactiveFiles = [
         'Biciestacionamientos_Final.shp',
         'Carpetas.shp',
         'Centros_de_justicia.shp',
@@ -12,32 +11,54 @@ document.addEventListener('DOMContentLoaded', () => {
         'Utopías.shp'
     ];
 
-    // State management
     const state = {
         map: null,
-        layers: {}, // Store layer references by filename
+        layers: {},
         activeLayers: new Set()
     };
 
-    // Initialize Map
-    function initMap() {
-        // CDMX Start coords centered
-        state.map = L.map('map').setView([19.4326, -99.1332], 11);
+    // Inicialización de la App
+    async function init() {
+        initMap();
+        initSidebar();
+        // Carga automática de la base fija
+        await loadBaseLayer('09mun');
+    }
 
-        // Dark Mode Tile Layer (CartoDB Dark Matter)
+    function initMap() {
+        state.map = L.map('map').setView([19.4326, -99.1332], 11);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
+            attribution: '&copy; CARTO',
             maxZoom: 20
         }).addTo(state.map);
     }
 
-    // UI generation
+    // Capa base de municipios (Fija y sin popups para no estorbar)
+    async function loadBaseLayer(baseName) {
+        try {
+            // shp() busca automáticamente .dbf asociada si le damos el .shp
+            const geojson = await shp(`./shapefiles/${baseName}.shp`);
+            const layer = L.geoJSON(geojson, {
+                style: {
+                    color: '#444',
+                    weight: 1,
+                    fillOpacity: 0.05,
+                    interactive: false
+                }
+            }).addTo(state.map);
+            state.map.fitBounds(layer.getBounds());
+            layer.bringToBack();
+        } catch (e) {
+            console.error("Error en capa base:", e);
+        }
+    }
+
     function initSidebar() {
         const container = document.getElementById('layers-list');
+        if (!container) return;
         container.innerHTML = '';
 
-        files.forEach(file => {
+        interactiveFiles.forEach(file => {
             const name = file.replace('.shp', '').replace(/_/g, ' ');
             const div = document.createElement('div');
             div.className = 'layer-item';
@@ -48,138 +69,71 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Event Listener for the whole item (clickable area)
-            div.addEventListener('click', (e) => {
-                const checkbox = div.querySelector('.layer-checkbox');
-                if (e.target !== checkbox && e.target.tagName !== 'LABEL') {
-                    checkbox.checked = !checkbox.checked;
-                    toggleLayer(file, checkbox.checked);
-                }
-            });
-
-            // Specific checkbox listener
             const checkbox = div.querySelector('.layer-checkbox');
-            checkbox.addEventListener('change', (e) => {
-                toggleLayer(file, e.target.checked);
-            });
-
+            checkbox.addEventListener('change', (e) => toggleLayer(file, e.target.checked));
             container.appendChild(div);
         });
     }
 
-    // Layer Toggling Logic
     async function toggleLayer(filename, isChecked) {
         if (isChecked) {
-            await loadLayer(filename);
+            const baseName = filename.replace('.shp', '');
+            await loadLayer(baseName, filename);
         } else {
-            removeLayer(filename);
+            if (state.layers[filename]) state.map.removeLayer(state.layers[filename]);
         }
-        updateStatus();
     }
 
-    async function loadLayer(filename) {
-        if (state.layers[filename]) {
-            // Already loaded but hidden? Or maybe we just add it back.
-            // If we cache the GeoJSON layer, we can just add it back.
-            if (!state.map.hasLayer(state.layers[filename])) {
-                state.layers[filename].addTo(state.map);
-            }
+    async function loadLayer(baseName, originalId) {
+        if (state.layers[originalId]) {
+            state.layers[originalId].addTo(state.map);
             return;
         }
 
         showLoader(true);
-        setStatus('Cargando ' + filename + '...');
-
         try {
-            // NOTE: shpjs usually takes a zip or base url. 
-            // If we only have .shp, we can try passing the .shp path. 
-            // However, verify if this works without .dbf.
-            // shp('path/to/file') usually expects .zip if it's a string, or tries to fetch .shp and .dbf
-
-            // We construct the path. 
-            const basePath = `./shapefiles/${filename}`;
-
-            // shp(basePath) will try to fetch basePath. 
-            // If it's just .shp, the library might try to fetch .dbf automatically if we pass the base name?
-            // Actually shp("foo") -> fetches foo.shp and foo.dbf
-            // So we should pass the name without extension?
-            // Let's try passing the full .shp path first. shp.js documentation says:
-            // shp("http://url/to/file.shp")
-
-            const geojson = await shp(basePath);
-
-            const randomColor = getRandomColor();
+            // Importante: shp() requiere que los 3 archivos tengan el mismo nombre base
+            const geojson = await shp(`./shapefiles/${baseName}.shp`);
 
             const layer = L.geoJSON(geojson, {
-                style: function (feature) {
-                    return {
-                        color: randomColor,
-                        weight: 2,
-                        opacity: 0.8,
-                        fillOpacity: 0.2
-                    };
-                },
-                onEachFeature: function (feature, layer) {
-                    // Start popup content with properties
-                    let popupContent = '<div style="max-height: 200px; overflow-y: auto;">';
-                    if (feature.properties) {
-                        for (const [key, value] of Object.entries(feature.properties)) {
-                            popupContent += `<strong>${key}:</strong> ${value}<br>`;
-                        }
+                style: () => ({
+                    color: getRandomColor(),
+                    weight: 2,
+                    fillOpacity: 0.4
+                }),
+                onEachFeature: (feature, layer) => {
+                    let popup = '<div style="max-height:150px; overflow-y:auto;"><b>Datos:</b><br>';
+                    // Ahora que tienes .dbf, esto mostrará toda la tabla de atributos
+                    for (const [key, val] of Object.entries(feature.properties || {})) {
+                        popup += `<strong>${key}:</strong> ${val}<br>`;
                     }
-                    popupContent += '</div>';
-                    layer.bindPopup(popupContent);
+                    layer.bindPopup(popup + '</div>');
                 }
             });
 
             layer.addTo(state.map);
-            state.layers[filename] = layer;
+            state.layers[originalId] = layer;
 
-            // Zoom to layer if it's the first one or requested
+            // Auto-zoom to the new layer (optional, but good for UX)
             // state.map.fitBounds(layer.getBounds());
-
+            // Uncomment above if you want to zoom to every layer checked
         } catch (error) {
-            console.error('Error loading shapefile:', error);
-            alert(`Error al cargar ${filename}. Asegúrate de que los archivos .shx y .dbf también existan si son necesarios.`);
-            // Uncheck the box if failed
-            const checkbox = document.getElementById(`check-${filename}`);
-            if (checkbox) checkbox.checked = false;
+            console.error(error);
+            alert(`Error: No se pudieron encontrar los archivos (.shp, .dbf, .shx) para ${baseName}`);
+            document.getElementById(`check-${originalId}`).checked = false;
         } finally {
             showLoader(false);
-            setStatus('Listo');
         }
     }
 
-    function removeLayer(filename) {
-        if (state.layers[filename] && state.map.hasLayer(state.layers[filename])) {
-            state.map.removeLayer(state.layers[filename]);
-        }
-    }
-
-    // Utilities
     function showLoader(show) {
         const el = document.getElementById('map-overlay');
-        if (show) el.classList.remove('hidden');
-        else el.classList.add('hidden');
-    }
-
-    function setStatus(text) {
-        document.getElementById('status-text').textContent = text;
-        const dot = document.getElementById('status-dot');
-        if (text === 'Listo') dot.style.backgroundColor = 'var(--success)';
-        else dot.style.backgroundColor = 'var(--warning)';
+        if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
     }
 
     function getRandomColor() {
-        const colors = ['#f7768e', '#9ece6a', '#e0af68', '#7aa2f7', '#bb9af7', '#7dcfff']; // Theme colors
-        return colors[Math.floor(Math.random() * colors.length)];
+        return ['#f7768e', '#9ece6a', '#e0af68', '#7aa2f7', '#bb9af7'][Math.floor(Math.random() * 5)];
     }
 
-    function updateStatus() {
-        // Simple helper to keep status correct
-    }
-
-    // Initialize
-    initMap();
-    initSidebar();
+    init();
 });
