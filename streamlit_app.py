@@ -2,9 +2,7 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import geopandas as gpd
-import tempfile
 import os
-from zipfile import ZipFile
 
 # Page Configuration
 st.set_page_config(layout="wide", page_title="CDMX Map Viewer")
@@ -12,119 +10,120 @@ st.set_page_config(layout="wide", page_title="CDMX Map Viewer")
 # Title
 st.title("Visor de Mapas Shapefile - CDMX")
 
-# Sidebar for controls
+@st.cache_data
+def load_and_process_shapefile(filepath):
+    """Loads a shapefile, fixes CRS if missing, and returns a GeoDataFrame."""
+    try:
+        gdf = gpd.read_file(filepath)
+        
+        # Handle missing CRS (Naive geometries)
+        if gdf.crs is None and not gdf.empty:
+            # Check bounds to guess if it's Projected (meters) or Geographic (degrees)
+            x_min = gdf.total_bounds[0]
+            if x_min < -180 or x_min > 180:
+                # Assume UTM Zone 14N (EPSG:32614) - Common for CDMX data
+                gdf.set_crs(epsg=32614, inplace=True)
+            else:
+                # Assume WGS84 (EPSG:4326)
+                gdf.set_crs(epsg=4326, inplace=True)
+
+        # Reproject to EPSG:4326 for Folium
+        if gdf.crs and gdf.crs.to_string() != "EPSG:4326":
+            gdf = gdf.to_crs(epsg=4326)
+            
+        return gdf
+    except Exception as e:
+        return None
+
+# Sidebar
 with st.sidebar:
     st.image("logocdmx_1.png", width=150)
-    st.header("Configuración")
-    
-    st.subheader("Cargar Capas")
-    uploaded_file = st.file_uploader("Subir archivo ZIP con Shapefiles", type="zip")
-
-    st.info("Nota: El archivo ZIP debe contener los archivos .shp, .shx y .dbf correspondientes.")
+    st.header("Capas Disponibles")
+    st.info("Todas las capas en la carpeta 'shapefiles' se han cargado automáticamente.")
 
 # Initialize Map
 # Centered on Mexico City
 m = folium.Map(location=[19.4326, -99.1332], zoom_start=11, tiles="CartoDB positron")
 
-# 1. Load Base Layer (09mun) if it exists locally
-base_layer_path = os.path.join("shapefiles", "09mun.shp")
-if os.path.exists(base_layer_path):
-    try:
-        # caching the base layer load could improve performance, but for simplicity:
-        gdf_base = gpd.read_file(base_layer_path)
-        
-        # Reproject to EPSG:4326 (Lat/Lon) if necessary
-        if gdf_base.crs and gdf_base.crs.to_string() != "EPSG:4326":
-            gdf_base = gdf_base.to_crs(epsg=4326)
+# Load Shapefiles
+shapefiles_dir = "shapefiles"
+if os.path.exists(shapefiles_dir):
+    # Distinct colors for different layers
+    colors = [
+        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
+        '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', 
+        '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', 
+        '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
+    ]
+    
+    shp_files = sorted([f for f in os.listdir(shapefiles_dir) if f.endswith(".shp")])
+    
+    if not shp_files:
+        st.warning("No se encontraron archivos .shp en la carpeta 'shapefiles'.")
+    else:
+        for i, shp_file in enumerate(shp_files):
+            full_path = os.path.join(shapefiles_dir, shp_file)
             
-        folium.GeoJson(
-            gdf_base,
-            name="Límite CDMX",
-            style_function=lambda x: {
-                'color': 'black',
-                'weight': 2,
-                'fillOpacity': 0
-            },
-            tooltip="Alcaldía"
-        ).add_to(m)
-    except Exception as e:
-        st.error(f"Error cargando capa base local: {e}")
-
-# 2. Handle User Upload
-if uploaded_file is not None:
-    # Create a temporary directory to handle the zip file
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        # Save uploaded ZIP to temp file
-        zip_path = os.path.join(tmpdirname, "uploaded.zip")
-        with open(zip_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        
-        # Extract ZIP
-        try:
-            with ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(tmpdirname)
+            # Load Data
+            gdf = load_and_process_shapefile(full_path)
             
-            # Find all .shp files in the extracted folder
-            shp_files = []
-            for root, dirs, files in os.walk(tmpdirname):
-                for file in files:
-                    if file.lower().endswith(".shp"):
-                        shp_files.append(os.path.join(root, file))
-            
-            if not shp_files:
-                st.sidebar.error("No se encontraron archivos .shp en el ZIP.")
-            else:
-                st.sidebar.success(f"Se encontraron {len(shp_files)} archivos Shapefile.")
+            if gdf is not None:
+                layer_name = os.path.splitext(shp_file)[0]
+                layer_color = colors[i % len(colors)]
                 
-                # Colors for dynamic layers
-                colors = ['green', 'orange', 'purple', 'blue', 'red']
+                # Create FeatureGroup
+                fg = folium.FeatureGroup(name=layer_name)
                 
-                for i, shp_file in enumerate(shp_files):
-                    try:
-                        gdf_user = gpd.read_file(shp_file)
-                        
-                        # Handle missing CRS (Naive geometries)
-                        if gdf_user.crs is None:
-                            if not gdf_user.empty:
-                                # Check bounds to guess if it's Projected (meters) or Geographic (degrees)
-                                x_min = gdf_user.total_bounds[0]
-                                if x_min < -180 or x_min > 180:
-                                    # Assume UTM Zone 14N (EPSG:32614) - Common for CDMX
-                                    gdf_user.set_crs(epsg=32614, inplace=True)
-                                else:
-                                    # Assume WGS84 (EPSG:4326)
-                                    gdf_user.set_crs(epsg=4326, inplace=True)
+                if not gdf.empty:
+                    # Decide how to render based on geometry type
+                    geom_type = gdf.geom_type.iloc[0] if not gdf.empty else "Unknown"
+                    
+                    if geom_type == 'Point' or geom_type == 'MultiPoint':
+                        # For points, we iterate to create styled CircleMarkers
+                        # Limit to prevent browser crash if too many points
+                        if len(gdf) > 2000:
+                            st.sidebar.warning(f"Capa '{layer_name}' tiene muchos puntos ({len(gdf)}). Solo se muestran los primeros 2000.")
+                            gdf_to_plot = gdf.iloc[:2000]
+                        else:
+                            gdf_to_plot = gdf
 
-                        # Reproject if needed
-                        if gdf_user.crs and gdf_user.crs.to_string() != "EPSG:4326":
-                            gdf_user = gdf_user.to_crs(epsg=4326)
-                        
-                        layer_name = os.path.basename(shp_file)
-                        layer_color = colors[i % len(colors)]
-                        
+                        for idx, row in gdf_to_plot.iterrows():
+                            # Create tooltip with first 5 columns
+                            tooltip_text = "<br>".join([f"<b>{col}:</b> {str(row[col])}" for col in gdf.columns[:5]])
+                            
+                            folium.CircleMarker(
+                                location=[row.geometry.y, row.geometry.x],
+                                radius=5,
+                                color=layer_color,
+                                fill=True,
+                                fill_color=layer_color,
+                                fill_opacity=0.7,
+                                tooltip=tooltip_text
+                            ).add_to(fg)
+                    else:
+                        # For Polygons/Lines (Standard GeoJSON)
                         folium.GeoJson(
-                            gdf_user,
+                            gdf,
                             name=layer_name,
                             style_function=lambda x, color=layer_color: {
                                 'color': color,
                                 'weight': 2,
                                 'fillOpacity': 0.4
                             },
-                            tooltip=folium.GeoJsonTooltip(
-                                fields=list(gdf_user.columns)[:5], # Show first 5 columns in tooltip
-                                aliases=list(gdf_user.columns)[:5],
+                             tooltip=folium.GeoJsonTooltip(
+                                fields=list(gdf.columns)[:5],
+                                aliases=list(gdf.columns)[:5],
                                 localize=True
                             )
-                        ).add_to(m)
-                        
-                    except Exception as e:
-                        st.sidebar.warning(f"No se pudo cargar {os.path.basename(shp_file)}: {e}")
-                        
-        except Exception as e:
-            st.error(f"Error procesando el archivo ZIP: {e}")
+                        ).add_to(fg)
+                
+                fg.add_to(m)
+            else:
+                st.sidebar.error(f"Error cargando {shp_file}")
 
-# Add Layer Control to toggle layers
+# Add Layer Control
 folium.LayerControl().add_to(m)
 
 # Render Map
-st_folium(m, width="100%", height=700)
+# returned_objects=[] optimizes performance by not sending data back to Python
+st_folium(m, width="100%", height=800, returned_objects=[])
