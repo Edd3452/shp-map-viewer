@@ -30,3 +30,16 @@ Si tienes Python instalado:
 Los archivos Shapefile se encuentran en la carpeta `shapefiles/`.
 - **09mun**: Capa base estática (Municipios).
 - Otras capas son seleccionables mediante casillas de verificación.
+
+### Opción 3: Versión Streamlit (Python)
+Si deseas utilizar Streamlit (por ejemplo, para desplegar en Streamlit Cloud):
+
+1.  Instala las dependencias:
+    ```powershell
+    pip install -r requirements.txt
+    ```
+2.  Ejecuta la aplicación:
+    ```powershell
+    streamlit run streamlit_app.py
+    ```
+

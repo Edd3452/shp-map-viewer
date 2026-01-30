@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Mapas y Capas</title>
+    <title>Visor de Mapas GeoJSON CDMX</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,12 +22,21 @@
     <div id="app-container">
         <aside id="sidebar">
             <div class="sidebar-header">
-                <h1>Capas</h1>
-                <p>Mapas Shapefile</p>
+                <img src="logocdmx_1.png" alt="Logo" width="125"
+                    style="display: block; margin-bottom: 10px; border-radius: 5px;">
+                <h1>Mapas CDMX</h1>
+                <p>Capas Geográficas</p>
+
+                <div class="upload-section">
+                    <label for="file-upload" class="upload-btn">
+                        <span class="icon">📂</span> Cargar Archivo (.zip)
+                    </label>
+                    <input type="file" id="file-upload" accept=".zip" style="display: none;">
+                </div>
             </div>
             <div id="layers-list" class="layers-container">
                 <!-- Layers will be injected here via JS -->
-                <div class="loading-state">Cargando capas...</div>
+
             </div>
             <div class="sidebar-footer">
                 <div class="status-indicator">
@@ -41,7 +50,7 @@
             <div id="map"></div>
             <div id="map-overlay" class="hidden">
                 <div class="loader"></div>
-                <p>Procesando geometría...</p>
+                <p>Cargando datos...</p>
             </div>
         </main>
     </div>
@@ -55,6 +64,10 @@
 
     <!-- App Logic -->
     <script src="script.js"></script>
+
+    <!-- Proj4js (optional, kept for advanced reprojection) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.6.2/proj4.js"></script>
+
 </body>
 
 </html>

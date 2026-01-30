@@ -1,138 +1,182 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Lista de archivos interactivos (sin el archivo base 09mun)
-    const interactiveFiles = [
-        'Biciestacionamientos_Final.shp',
-        'Carpetas.shp',
-        'Centros_de_justicia.shp',
-        'Estacionamientos_Moto.shp',
-        'GradoMarginación.shp',
-        'Pilares.shp',
-        'UT.shp',
-        'Utopías.shp'
-    ];
 
     const state = {
         map: null,
         layers: {},
-        activeLayers: new Set()
+        loadingCount: 0,
+        colorIndex: 0
     };
 
-    // Inicialización de la App
-    async function init() {
+    function init() {
+        if (!window.L || !window.shp) {
+            console.error('Libraries not loaded');
+            return;
+        }
+
         initMap();
-        initSidebar();
-        // Carga automática de la base fija
-        await loadBaseLayer('09mun');
+        loadBaseBoundary();
+        setupFileUpload();
     }
 
     function initMap() {
-        state.map = L.map('map').setView([19.4326, -99.1332], 11);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        state.map = L.map('map').setView([19.4326, -99.1332], 10);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; CARTO',
             maxZoom: 20
         }).addTo(state.map);
     }
 
-    // Capa base de municipios (Fija y sin popups para no estorbar)
-    async function loadBaseLayer(baseName) {
-        try {
-            // shp() busca automáticamente .dbf asociada si le damos el .shp
-            const geojson = await shp(`./shapefiles/${baseName}.shp`);
+    function loadBaseBoundary() {
+        // Base boundary (static)
+        shp('shapefiles/09mun').then(geojson => {
             const layer = L.geoJSON(geojson, {
                 style: {
-                    color: '#444',
-                    weight: 1,
-                    fillOpacity: 0.05,
-                    interactive: false
+                    color: '#000000',
+                    weight: 2,
+                    fillOpacity: 0
+                },
+                onEachFeature: (feature, layer) => {
+                    if (feature.properties) {
+                        let popup = '<b>Base Boundary</b><br>';
+                        for (const [k, v] of Object.entries(feature.properties)) {
+                            popup += `<b>${k}:</b> ${v}<br>`;
+                        }
+                        layer.bindPopup(popup);
+                    }
                 }
-            }).addTo(state.map);
+            });
+            layer.addTo(state.map);
             state.map.fitBounds(layer.getBounds());
-            layer.bringToBack();
-        } catch (e) {
-            console.error("Error en capa base:", e);
-        }
+            console.log('Base boundary loaded');
+        }).catch(e => console.error('Error loading base boundary', e));
     }
 
-    function initSidebar() {
-        const container = document.getElementById('layers-list');
-        if (!container) return;
-        container.innerHTML = '';
+    function setupFileUpload() {
+        const fileInput = document.getElementById('file-upload');
+        if (!fileInput) return;
 
-        interactiveFiles.forEach(file => {
-            const name = file.replace('.shp', '').replace(/_/g, ' ');
-            const div = document.createElement('div');
-            div.className = 'layer-item';
-            div.innerHTML = `
-                <div class="layer-info">
-                    <input type="checkbox" id="check-${file}" class="layer-checkbox">
-                    <label for="check-${file}" class="layer-name">${name}</label>
-                </div>
-            `;
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-            const checkbox = div.querySelector('.layer-checkbox');
-            checkbox.addEventListener('change', (e) => toggleLayer(file, e.target.checked));
-            container.appendChild(div);
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                alert('Please provide a .zip file containing the Shapefile (.shp, .dbf, .shx)');
+                fileInput.value = '';
+                return;
+            }
+
+            showLoader(true);
+
+            try {
+                const buffer = await file.arrayBuffer();
+                const geojson = await shp(buffer);
+
+                // Handle single or multiple layers in zip
+                const layersData = Array.isArray(geojson) ? geojson : [geojson];
+
+                layersData.forEach((data, i) => {
+                    const color = getNextColor();
+                    const layer = createGeoJSONLayer(data, color);
+                    const name = data.fileName || file.name.replace('.zip', '') + (layersData.length > 1 ? ` ${i + 1}` : '');
+                    const id = `user-${Date.now()}-${i}`;
+
+                    layer.addTo(state.map);
+                    state.layers[id] = layer;
+
+                    // Add logic to UI
+                    addLayerControl(name, id, true, (checked) => {
+                        if (checked) layer.addTo(state.map);
+                        else layer.remove();
+                    });
+
+                    // Zoom to the first layer found
+                    if (i === 0) state.map.fitBounds(layer.getBounds());
+                });
+
+            } catch (err) {
+                console.error('Error processing file:', err);
+                alert('Error loading shapefile. Ensure user is uploading a valid zip.');
+            } finally {
+                showLoader(false);
+                fileInput.value = '';
+            }
         });
     }
 
-    async function toggleLayer(filename, isChecked) {
-        if (isChecked) {
-            const baseName = filename.replace('.shp', '');
-            await loadLayer(baseName, filename);
-        } else {
-            if (state.layers[filename]) state.map.removeLayer(state.layers[filename]);
-        }
-    }
-
-    async function loadLayer(baseName, originalId) {
-        if (state.layers[originalId]) {
-            state.layers[originalId].addTo(state.map);
-            return;
-        }
-
-        showLoader(true);
-        try {
-            // Importante: shp() requiere que los 3 archivos tengan el mismo nombre base
-            const geojson = await shp(`./shapefiles/${baseName}.shp`);
-
-            const layer = L.geoJSON(geojson, {
-                style: () => ({
-                    color: getRandomColor(),
+    function createGeoJSONLayer(data, color) {
+        return L.geoJSON(data, {
+            pointToLayer: (feature, latlng) => {
+                return L.circleMarker(latlng, {
+                    radius: 6,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            style: feature => {
+                return {
+                    color: color,
                     weight: 2,
+                    opacity: 1,
                     fillOpacity: 0.4
-                }),
-                onEachFeature: (feature, layer) => {
-                    let popup = '<div style="max-height:150px; overflow-y:auto;"><b>Datos:</b><br>';
-                    // Ahora que tienes .dbf, esto mostrará toda la tabla de atributos
-                    for (const [key, val] of Object.entries(feature.properties || {})) {
-                        popup += `<strong>${key}:</strong> ${val}<br>`;
+                };
+            },
+            onEachFeature: (feature, layer) => {
+                const p = feature.properties;
+                if (p) {
+                    let html = '<div style="max-height: 200px; overflow: auto;">';
+                    for (const [k, v] of Object.entries(p)) {
+                        html += `<b>${k}:</b> ${v}<br>`;
                     }
-                    layer.bindPopup(popup + '</div>');
+                    html += '</div>';
+                    layer.bindPopup(html);
                 }
-            });
-
-            layer.addTo(state.map);
-            state.layers[originalId] = layer;
-
-            // Auto-zoom to the new layer (optional, but good for UX)
-            // state.map.fitBounds(layer.getBounds());
-            // Uncomment above if you want to zoom to every layer checked
-        } catch (error) {
-            console.error(error);
-            alert(`Error: No se pudieron encontrar los archivos (.shp, .dbf, .shx) para ${baseName}`);
-            document.getElementById(`check-${originalId}`).checked = false;
-        } finally {
-            showLoader(false);
-        }
+            }
+        });
     }
 
-    function showLoader(show) {
+    function addLayerControl(name, id, checked, onToggle) {
+        const list = document.getElementById('layers-list');
+        const item = document.createElement('div');
+        item.className = 'layer-item active';
+        item.innerHTML = `
+            <div class="layer-info">
+                <input type="checkbox" checked class="layer-checkbox">
+                <span class="layer-name">${name}</span>
+            </div>
+        `;
+
+        const box = item.querySelector('input');
+        box.addEventListener('change', (e) => {
+            item.classList.toggle('active', e.target.checked);
+            onToggle(e.target.checked);
+        });
+
+        list.insertBefore(item, list.firstChild);
+    }
+
+    function showLoader(visible) {
         const el = document.getElementById('map-overlay');
-        if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
+        if (el) el.classList.toggle('hidden', !visible);
     }
 
-    function getRandomColor() {
-        return ['#f7768e', '#9ece6a', '#e0af68', '#7aa2f7', '#bb9af7'][Math.floor(Math.random() * 5)];
+    function getNextColor() {
+        const colors = [
+            'rgb(153, 204, 0)',   // Green
+            'rgb(255, 153, 0)',   // Orange
+            'rgb(51, 152, 102)',  // Pistachio
+            'rgb(128, 0, 128)',   // Purple
+            'rgb(255, 204, 153)', // Peach
+            'rgb(51, 204, 204)',  // Blue 1
+            'rgb(0, 128, 128)',   // Blue 2
+            'rgb(102, 102, 153)'  // Gray
+        ];
+        const c = colors[state.colorIndex % colors.length];
+        state.colorIndex++;
+        return c;
     }
 
     init();
