@@ -83,6 +83,18 @@ if uploaded_file is not None:
                     try:
                         gdf_user = gpd.read_file(shp_file)
                         
+                        # Handle missing CRS (Naive geometries)
+                        if gdf_user.crs is None:
+                            if not gdf_user.empty:
+                                # Check bounds to guess if it's Projected (meters) or Geographic (degrees)
+                                x_min = gdf_user.total_bounds[0]
+                                if x_min < -180 or x_min > 180:
+                                    # Assume UTM Zone 14N (EPSG:32614) - Common for CDMX
+                                    gdf_user.set_crs(epsg=32614, inplace=True)
+                                else:
+                                    # Assume WGS84 (EPSG:4326)
+                                    gdf_user.set_crs(epsg=4326, inplace=True)
+
                         # Reproject if needed
                         if gdf_user.crs and gdf_user.crs.to_string() != "EPSG:4326":
                             gdf_user = gdf_user.to_crs(epsg=4326)
