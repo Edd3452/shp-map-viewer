@@ -8,7 +8,7 @@ import os
 st.set_page_config(layout="wide", page_title="CDMX Map Viewer")
 
 # Title
-st.title("Visor de Mapas Shapefile - CDMX")
+st.title(" Visor Geoespacial- CDMX")
 
 @st.cache_data
 def load_and_process_shapefile(filepath):
@@ -78,7 +78,7 @@ if os.path.exists(shapefiles_dir):
             
             # Checkbox in sidebar
             # Default to False so they aren't viewed "all together"
-            show_layer = st.sidebar.checkbox(f"Mostrar {layer_name}", value=False)
+            show_layer = st.sidebar.checkbox(f"Capa {layer_name}", value=False)
             
             if show_layer:
                 full_path = os.path.join(shapefiles_dir, shp_file)

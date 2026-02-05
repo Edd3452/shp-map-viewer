@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         initMap();
         loadBaseBoundary();
+        loadAdditionalLayers();
         setupFileUpload();
     }
 
@@ -29,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadBaseBoundary() {
         // Base boundary (static)
-        shp('shapefiles/09mun').then(geojson => {
+        shp('shapefiles/09mun.shp').then(geojson => {
             const layer = L.geoJSON(geojson, {
                 style: {
                     color: '#000000',
@@ -50,6 +51,30 @@ document.addEventListener('DOMContentLoaded', () => {
             state.map.fitBounds(layer.getBounds());
             console.log('Base boundary loaded');
         }).catch(e => console.error('Error loading base boundary', e));
+    }
+
+    function loadAdditionalLayers() {
+        const layersToLoad = [
+            { name: 'Grado Marginación', path: 'shapefiles/GradoMarginacion.shp' },
+            { name: 'Pilares', path: 'shapefiles/Pilares.shp' }
+        ];
+
+        layersToLoad.forEach(info => {
+            shp(info.path).then(geojson => {
+                const color = getNextColor();
+                const layer = createGeoJSONLayer(geojson, color);
+                const id = info.name.toLowerCase().replace(/\s/g, '-');
+
+                layer.addTo(state.map);
+                state.layers[id] = layer;
+
+                addLayerControl(info.name, id, true, (checked) => {
+                    if (checked) layer.addTo(state.map);
+                    else layer.remove();
+                });
+                console.log(`${info.name} loaded`);
+            }).catch(e => console.error(`Error loading ${info.name}`, e));
+        });
     }
 
     function setupFileUpload() {
