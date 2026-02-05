@@ -128,7 +128,7 @@ body {
     appearance: none;
     width: 18px;
     height: 18px;
-    border: 2px solid #000;
+    border: 2px solid rgb(157, 33, 72);
     border-radius: 4px;
     background: transparent;
     cursor: pointer;
@@ -137,8 +137,8 @@ body {
 }
 
 .layer-checkbox:checked {
-    background-color: #000;
-    border-color: #000;
+    background-color: rgb(157, 33, 72);
+    border-color: rgb(157, 33, 72);
 }
 
 .layer-checkbox:checked::after {
@@ -154,7 +154,7 @@ body {
 .layer-name {
     font-size: 0.95rem;
     font-weight: 500;
-    color: #000;
+    color: rgb(157, 33, 72);
     user-select: none;
     white-space: nowrap;
     overflow: hidden;

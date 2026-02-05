@@ -42,7 +42,7 @@ with st.sidebar:
     st.info("Todas las capas en la carpeta 'shapefiles' se han cargado automáticamente.")
 
 # Custom CSS for white background
-st.markdown(
+st.markdown('''
     <style>
     .stApp {
         background-color: white;
@@ -60,14 +60,14 @@ st.markdown(
     [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] label,
     [data-testid="stSidebar"] div {
-        color: black !important;
+        color: rgb(157, 33, 72) !important;
     }
     /* Specific fix for checkbox labels */
     [data-testid="stSidebar"] .stCheckbox p {
-        color: black !important;
+        color: rgb(157, 33, 72) !important;
     }
     </style>
-    , unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
 
 # Initialize Map
 # Centered on Mexico City
