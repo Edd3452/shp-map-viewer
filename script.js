@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadBaseBoundary() {
         // Base boundary (static)
-        shp('shapefiles/09mun.shp').then(geojson => {
+        shp('Capas 09mun.shp').then(geojson => {
             const layer = L.geoJSON(geojson, {
                 style: {
                     color: '#000000',
@@ -55,8 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadAdditionalLayers() {
         const layersToLoad = [
-            { name: 'Grado Marginación', path: 'shapefiles/GradoMarginacion.shp' },
-            { name: 'Pilares', path: 'shapefiles/Pilares.shp' }
+            { name: 'Grado Marginación', path: 'Capas GradoMarginacion.shp' },
+            { name: 'Pilares', path: 'Capas Pilares.shp' }
         ];
 
         layersToLoad.forEach(info => {

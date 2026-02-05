@@ -48,6 +48,12 @@ st.markdown("""
         background-color: white;
         color: black;
     }
+    [data-testid="stSidebar"] {
+        background-color: white;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        background-color: white;
+    }
     </style>
     """, unsafe_allow_html=True)
 
