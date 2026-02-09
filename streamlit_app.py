@@ -1,11 +1,21 @@
 import streamlit as st
-import folium
-from streamlit_folium import st_folium
-import geopandas as gpd
 import os
 
 # Page Configuration
 st.set_page_config(layout="wide", page_title="CDMX Map Viewer")
+
+try:
+    import folium
+    from streamlit_folium import st_folium
+    import geopandas as gpd
+except ImportError as e:
+    st.error(f"Error importing libraries: {e}")
+    st.info("Intentando instalar dependencias faltantes...")
+    # Fallback or detailed error
+    st.stop()
+except Exception as e:
+    st.error(f"An unexpected error occurred during imports: {e}")
+    st.stop()
 
 # Title
 st.title(" Visor Geoespacial- CDMX")
