@@ -97,6 +97,26 @@ if os.path.exists(shapefiles_dir):
     
     shp_files = sorted([f for f in os.listdir(shapefiles_dir) if f.endswith(".shp")])
     
+    # 1. Handle Base Layer (09mun) separately
+    base_layer_input = [f for f in shp_files if f.lower().startswith("09mun")]
+    if base_layer_input:
+        base_file = base_layer_input[0]
+        base_path = os.path.join(shapefiles_dir, base_file)
+        base_gdf = load_and_process_shapefile(base_path)
+        
+        if base_gdf is not None:
+            folium.GeoJson(
+                base_gdf,
+                name="Límites Municipales",
+                style_function=lambda x: {
+                    'color': '#333333',     # Dark grey boundary
+                    'weight': 2,
+                    'fillOpacity': 0,       # Transparent
+                    'dashArray': '5, 5'     # Dashed line for boundaries (optional, but looks nice)
+                },
+                tooltip="Límite Municipal"
+            ).add_to(m)
+
     if not shp_files:
         st.warning("No se encontraron archivos .shp en la carpeta 'shapefiles'.")
     else:
@@ -104,6 +124,9 @@ if os.path.exists(shapefiles_dir):
         for i, shp_file in enumerate(shp_files):
             layer_name = os.path.splitext(shp_file)[0]
             
+            if layer_name.lower().startswith("09mun"):
+                continue
+
             # Checkbox in sidebar
             # Default to False so they aren't viewed "all together"
             show_layer = st.sidebar.checkbox(f"Capa {layer_name}", value=False)
