@@ -30,22 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadBaseBoundary() {
         // Base boundary (static)
-        shp('Capas 09mun.shp').then(geojson => {
+        shp('shapefiles/09mun.shp').then(geojson => {
             const layer = L.geoJSON(geojson, {
                 style: {
-                    color: '#000000',
+                    color: '#333333', // Dark grey for boundaries
                     weight: 2,
-                    fillOpacity: 0
+                    fillOpacity: 0    // Transparent
                 },
-                onEachFeature: (feature, layer) => {
-                    if (feature.properties) {
-                        let popup = '<b>Base Boundary</b><br>';
-                        for (const [k, v] of Object.entries(feature.properties)) {
-                            popup += `<b>${k}:</b> ${v}<br>`;
-                        }
-                        layer.bindPopup(popup);
-                    }
-                }
+                interactive: false // Base layer shouldn't capture clicks
             });
             layer.addTo(state.map);
             state.map.fitBounds(layer.getBounds());
@@ -55,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadAdditionalLayers() {
         const layersToLoad = [
-            { name: 'Grado Marginación', path: 'Capas GradoMarginacion.shp' },
-            { name: 'Pilares', path: 'Capas Pilares.shp' }
+            { name: 'Grado Marginación', path: 'shapefiles/GradoMarginacion.shp' },
+            { name: 'Pilares', path: 'shapefiles/Pilares.shp' }
         ];
 
         layersToLoad.forEach(info => {
