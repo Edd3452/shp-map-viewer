@@ -49,7 +49,7 @@ def load_and_process_shapefile(filepath):
 with st.sidebar:
     st.image("logocdmx_1.png", width=150)
     st.header("Capas Disponibles")
-    st.info("Todas las capas en la carpeta 'shapefiles' se han cargado automáticamente.")
+    st.info("Seleccione las capas desde el menú desplegable.")
 
 # Custom CSS for white background
 st.markdown('''
@@ -95,6 +95,7 @@ if os.path.exists(shapefiles_dir):
         '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
     ]
     
+    # Scan for shapefiles to handle base layer logic
     shp_files = sorted([f for f in os.listdir(shapefiles_dir) if f.endswith(".shp")])
     
     # 1. Handle Base Layer (09mun) separately
@@ -119,76 +120,98 @@ if os.path.exists(shapefiles_dir):
 
     if not shp_files:
         st.warning("No se encontraron archivos .shp en la carpeta 'shapefiles'.")
-    else:
-        # Create checkboxes for each layer
-        for i, shp_file in enumerate(shp_files):
-            layer_name = os.path.splitext(shp_file)[0]
-            
-            if layer_name.lower().startswith("09mun"):
-                continue
+    # Define Layer Structure and Paths
+    # Note: Keys are the display names, Values are the filenames relative to 'shapefiles' dir
+    LAYER_CONFIG = {
+        "Sociales": {
+            "Bicicletas": "Social/Biciestacionamientos_Final.shp",
+            "Motos": "Social/Estacionamientos_Moto.shp",
+            "Pilares": "Social/Pilares.shp",
+            "UT": "Social/UT.shp",
+            "Utopías": "Social/utopias.shp",
+            "Centros de Justicia": "Social/Centros_de_justicia.shp"
+        },
+        "Delitos": {
+            "Homicidios": "Delitos/homicidios .shp",
+            "Robo a casa c/violencia": "Delitos/Robo a casa habitacon con violencia .shp",
+            "Robo a casa s/violencia": "Delitos/Robo a casa habitaion sin violencia .shp",
+            "Robo a negocio": "Delitos/Robo a negocio.shp",
+            "Robo a repartidor": "Delitos/Robo a repartidor.shp",
+            "Robo en microbús": "Delitos/Robo a trasporte Microbus.shp",
+            "Robo moto c/violencia": "Delitos/Robo moto con violencia.shp",
+            "Robo moto s/violencia": "Delitos/Robo moto sin violencia.shp",
+            "Robo pasajero metro": "Delitos/Robo pasaje metro.shp",
+            "Robo pasajero taxi": "Delitos/Robo pasaje taxi.shp",
+            "Robo de vehículo": "Delitos/Robo vehiculos.shp",
+            "Secuestro": "Delitos/secuestros.shp",
+            "Violación": "Delitos/violaciones.shp"
+        },
+        "Socio-Demográfico": {
+            "Índice de Desarrollo": "Socio demografico/alcd.shp", # Best guess for 'alcd'
+            "Grado de Marginación": "Socio demografico/GradoMarginacion.shp",
+            # "Territorios de Paz": "Socio demografico/..." # Missing file
+        }
+    }
 
-            # Checkbox in sidebar
-            # Default to False so they aren't viewed "all together"
-            show_layer = st.sidebar.checkbox(f"Capa {layer_name}", value=False)
-            
-            if show_layer:
-                full_path = os.path.join(shapefiles_dir, shp_file)
+    # Iterate through the menus
+    for menu_name, layers in LAYER_CONFIG.items():
+        with st.sidebar.expander(menu_name, expanded=False):
+            for display_name, rel_path in layers.items():
+                full_path = os.path.join(shapefiles_dir, rel_path)
                 
-                # Load Data only if checked
-                gdf = load_and_process_shapefile(full_path)
-                
-                if gdf is not None:
-                    layer_color = colors[i % len(colors)]
-                    
-                    # Create FeatureGroup
-                    fg = folium.FeatureGroup(name=layer_name)
-                    
-                    if not gdf.empty:
-                        # Decide how to render based on geometry type
-                        geom_type = gdf.geom_type.iloc[0] if not gdf.empty else "Unknown"
-                        
-                        if geom_type == 'Point' or geom_type == 'MultiPoint':
-                            # For points, we iterate to create styled CircleMarkers
-                            # Limit to prevent browser crash if too many points
-                            if len(gdf) > 2000:
-                                st.sidebar.warning(f"Capa '{layer_name}' tiene muchos puntos ({len(gdf)}). Solo se muestran los primeros 2000.")
-                                gdf_to_plot = gdf.iloc[:2000]
+                # Check if file exists before showing checkbox (optional, but good UX)
+                if os.path.exists(full_path):
+                     show_layer = st.checkbox(display_name, value=False, key=full_path)
+                     
+                     if show_layer:
+                        gdf = load_and_process_shapefile(full_path)
+                        if gdf is not None and not gdf.empty:
+                            layer_color = colors[abs(hash(display_name)) % len(colors)]
+                            
+                            fg = folium.FeatureGroup(name=display_name)
+                            
+                            geom_type = gdf.geom_type.iloc[0]
+                            
+                            if geom_type == 'Point' or geom_type == 'MultiPoint':
+                                if len(gdf) > 2000:
+                                    st.warning(f"Capa '{display_name}' tiene muchos puntos ({len(gdf)}). Mostrando primeros 2000.")
+                                    gdf_to_plot = gdf.iloc[:2000]
+                                else:
+                                    gdf_to_plot = gdf
+                                    
+                                for idx, row in gdf_to_plot.iterrows():
+                                    tooltip_text = "<br>".join([f"<b>{col}:</b> {str(row[col])}" for col in gdf.columns[:5]])
+                                    folium.CircleMarker(
+                                        location=[row.geometry.y, row.geometry.x],
+                                        radius=5,
+                                        color=layer_color,
+                                        fill=True,
+                                        fill_color=layer_color,
+                                        fill_opacity=0.7,
+                                        tooltip=tooltip_text
+                                    ).add_to(fg)
                             else:
-                                gdf_to_plot = gdf
-
-                            for idx, row in gdf_to_plot.iterrows():
-                                # Create tooltip with first 5 columns
-                                tooltip_text = "<br>".join([f"<b>{col}:</b> {str(row[col])}" for col in gdf.columns[:5]])
-                                
-                                folium.CircleMarker(
-                                    location=[row.geometry.y, row.geometry.x],
-                                    radius=5,
-                                    color=layer_color,
-                                    fill=True,
-                                    fill_color=layer_color,
-                                    fill_opacity=0.7,
-                                    tooltip=tooltip_text
+                                folium.GeoJson(
+                                    gdf,
+                                    name=display_name,
+                                    style_function=lambda x, color=layer_color: {
+                                        'color': color,
+                                        'weight': 2,
+                                        'fillOpacity': 0.4
+                                    },
+                                    tooltip=folium.GeoJsonTooltip(
+                                        fields=list(gdf.columns)[:5],
+                                        aliases=list(gdf.columns)[:5],
+                                        localize=True
+                                    )
                                 ).add_to(fg)
+                                
+                            fg.add_to(m)
                         else:
-                            # For Polygons/Lines (Standard GeoJSON)
-                            folium.GeoJson(
-                                gdf,
-                                name=layer_name,
-                                style_function=lambda x, color=layer_color: {
-                                    'color': color,
-                                    'weight': 2,
-                                    'fillOpacity': 0.4
-                                },
-                                 tooltip=folium.GeoJsonTooltip(
-                                    fields=list(gdf.columns)[:5],
-                                    aliases=list(gdf.columns)[:5],
-                                    localize=True
-                                )
-                            ).add_to(fg)
-                    
-                    fg.add_to(m)
+                            st.error(f"Error cargando {display_name}")
                 else:
-                    st.sidebar.error(f"Error cargando {shp_file}")
+                    # File missing
+                    st.caption(f"{display_name} (Archivo no encontrado)")
 
 # Render Map
 # returned_objects=[] optimizes performance by not sending data back to Python
