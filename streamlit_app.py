@@ -18,7 +18,7 @@ except Exception as e:
     st.stop()
 
 # Title
-st.title(" Visor Geoespacial- CDMX")
+st.title(" Visor Geoespacial-")
 
 @st.cache_data
 def load_and_process_shapefile(filepath):
@@ -47,8 +47,8 @@ def load_and_process_shapefile(filepath):
 
 # Sidebar
 with st.sidebar:
-    st.image("logocdmx_1.png", width=150)
-    st.header("Capas Disponibles")
+
+    st.header("Menús Disponibles")
     st.info("Seleccione las capas desde el menú desplegable.")
 
 # Custom CSS for white background
@@ -216,3 +216,27 @@ if os.path.exists(shapefiles_dir):
 # Render Map
 # returned_objects=[] optimizes performance by not sending data back to Python
 st_folium(m, width="100%", height=800, returned_objects=[])
+
+st.markdown(
+    """
+    <style>
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: white;
+        color: #333;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+        border-top: 1px solid #eaeaea;
+        z-index: 9999;
+    }
+    </style>
+    <div class="footer">
+        The data was created using data from the Attorney General's Office
+    </div>
+    """,
+    unsafe_allow_html=True
+)
