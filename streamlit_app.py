@@ -18,7 +18,7 @@ except Exception as e:
     st.stop()
 
 # Title
-st.title(" Visor Geoespacial-")
+
 
 @st.cache_data
 def load_and_process_shapefile(filepath):
@@ -132,19 +132,20 @@ if os.path.exists(shapefiles_dir):
             "Centros de Justicia": "Social/Centros_de_justicia.shp"
         },
         "Delitos": {
-            "Homicidios": "Delitos/homicidios .shp",
-            "Robo a casa c/violencia": "Delitos/Robo a casa habitacon con violencia .shp",
-            "Robo a casa s/violencia": "Delitos/Robo a casa habitaion sin violencia .shp",
-            "Robo a negocio": "Delitos/Robo a negocio.shp",
-            "Robo a repartidor": "Delitos/Robo a repartidor.shp",
-            "Robo en microbús": "Delitos/Robo a trasporte Microbus.shp",
-            "Robo moto c/violencia": "Delitos/Robo moto con violencia.shp",
-            "Robo moto s/violencia": "Delitos/Robo moto sin violencia.shp",
-            "Robo pasajero metro": "Delitos/Robo pasaje metro.shp",
-            "Robo pasajero taxi": "Delitos/Robo pasaje taxi.shp",
-            "Robo de vehículo": "Delitos/Robo vehiculos.shp",
-            "Secuestro": "Delitos/secuestros.shp",
-            "Violación": "Delitos/violaciones.shp"
+            "Homicidios": "Delitos/Homicidios.shp",
+            "Robo a Casa Habitación": "Delitos/ROBO A CASA HABITACIÓN .shp",
+            "Robo a Cuentahabiente": "Delitos/ROBO A CUENTAHABIENTE.shp",
+            "Robo a Negocio con Violencia": "Delitos/ROBO A NEGOCIO CON VIOLENCIA.shp",
+            "Robo a Pasajero en Microbús": "Delitos/ROBO A PASAJERO A BORDO DE MICROBUS.shp",
+            "Robo a Pasajero en Taxi": "Delitos/ROBO A PASAJERO A BORDO DE TAXI.shp",
+            "Robo a Pasajero en Metro": "Delitos/ROBO A PASAJERO A BORDO DEL METRO.shp",
+            "Robo a Repartidor": "Delitos/ROBO A REPARTIDOR.shp",
+            "Robo a Transportista": "Delitos/ROBO A TRASPORTISTA.shp",
+            "Robo de Motocicleta con Violencia": "Delitos/ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
+            "Robo de Vehículo Particular con Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
+            "Robo de Vehículo Público sin Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
+            "Robo de Vehículo": "Delitos/ROBO DE VEHICULO.shp",
+            "Violaciones": "Delitos/VIOLACIONES.shp"
         },
         "Socio-Demográfico": {
             "Índice de Desarrollo": "Socio demografico/alcd.shp", # Best guess for 'alcd'
@@ -180,9 +181,23 @@ if os.path.exists(shapefiles_dir):
                                     gdf_to_plot = gdf
                                     
                                 for idx, row in gdf_to_plot.iterrows():
+                                    if row.geometry is None:
+                                        continue
+                                        
+                                    # Handle different geometry types safely
+                                    try:
+                                        if row.geometry.geom_type == 'Point':
+                                            lat, lon = row.geometry.y, row.geometry.x
+                                        else:
+                                            # Use centroid for MultiPoint or other types
+                                            centroid = row.geometry.centroid
+                                            lat, lon = centroid.y, centroid.x
+                                    except AttributeError:
+                                        continue
+
                                     tooltip_text = "<br>".join([f"<b>{col}:</b> {str(row[col])}" for col in gdf.columns[:5]])
                                     folium.CircleMarker(
-                                        location=[row.geometry.y, row.geometry.x],
+                                        location=[lat, lon],
                                         radius=5,
                                         color=layer_color,
                                         fill=True,
@@ -235,7 +250,7 @@ st.markdown(
     }
     </style>
     <div class="footer">
-        The data was created using data from the Attorney General's Office
+        Los datos fueron creados utilizando datos de la Fiscalía General de Justicia
     </div>
     """,
     unsafe_allow_html=True
