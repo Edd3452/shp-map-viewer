@@ -76,6 +76,30 @@ st.markdown('''
     [data-testid="stSidebar"] .stCheckbox p {
         color: rgb(157, 33, 72) !important;
     }
+    /* Specific fix for checkbox labels */
+    [data-testid="stSidebar"] .stCheckbox p {
+        color: rgb(157, 33, 72) !important;
+    }
+    
+    /* Expander Styling */
+    /* Header text color */
+    [data-testid="stExpander"] details > summary {
+        color: rgb(157, 33, 72) !important;
+        font-weight: 600;
+    }
+    
+    /* Expanded header styling */
+    [data-testid="stExpander"] details[open] > summary {
+        background-color: #1a1b26;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 5px;
+        color: rgb(157, 33, 72) !important;
+    }
+
+    [data-testid="stExpander"] details[open] > summary:hover {
+        color: #ff4b4b !important;
+    }
     </style>
     ''', unsafe_allow_html=True)
 
@@ -149,7 +173,7 @@ if os.path.exists(shapefiles_dir):
         },
         "Socio-Demográfico": {
             "Índice de Desarrollo": "Socio demografico/alcd.shp", # Best guess for 'alcd'
-            "Grado de Marginación": "Socio demografico/GradoMarginacion.shp",
+            "Grado de Marginación": "Socio demografico/GradoMarginación.shp",
             # "Territorios de Paz": "Socio demografico/..." # Missing file
         }
     }
@@ -226,7 +250,7 @@ if os.path.exists(shapefiles_dir):
                             st.error(f"Error cargando {display_name}")
                 else:
                     # File missing
-                    st.caption(f"{display_name} (Archivo no encontrado)")
+                    st.markdown(f"<span style='color: #d15c7a; font-size: 0.8rem;'>{display_name} (Archivo no encontrado)</span>", unsafe_allow_html=True)
 
 # Render Map
 # returned_objects=[] optimizes performance by not sending data back to Python
