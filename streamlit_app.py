@@ -18,7 +18,7 @@ except Exception as e:
     st.stop()
 
 # Title
-st.title("CDMX Map Viewer v2.1")
+st.title("Visualizador geoespacial")
 @st.cache_data
 def load_and_process_shapefile(filepath):
     """Loads a shapefile, fixes CRS if missing, and returns a GeoDataFrame."""
@@ -49,7 +49,7 @@ with st.sidebar:
 
     st.header("Menús Disponibles")
     st.info("Seleccione las capas desde el menú desplegable.")
-    st.sidebar.write("v2.2 - Path sep: /")
+    st.sidebar.write("Actual")
 
 # Custom CSS for white background
 st.markdown('''
