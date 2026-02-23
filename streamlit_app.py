@@ -49,7 +49,7 @@ with st.sidebar:
 
     st.header("Menús Disponibles")
     st.info("Seleccione las capas desde el menú desplegable.")
-    st.sidebar.write("Actual")
+    st.sidebar.write("Variables 2026")
 
 # Custom CSS for white background
 st.markdown('''
