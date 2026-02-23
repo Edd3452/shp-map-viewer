@@ -48,8 +48,7 @@ def load_and_process_shapefile(filepath):
 with st.sidebar:
 
     st.header("Menús Disponibles")
-    st.info("Seleccione las capas desde el menú desplegable.")
-    st.sidebar.write("v2.3 - Submenus generated")
+    st.info("Seleccione las categorías para visualizar las capas.")
 
 # Custom CSS for white background
 st.markdown('''
@@ -155,23 +154,25 @@ if os.path.exists(shapefiles_dir):
             "Utopías": "Social/utopias.shp",
             "Centros de Justicia": "Social/Centros_de_justicia.shp"
         },
-        "Delitos a personas": {
-            "Homicidios": "Delitos/Homicidios.shp",
-            "Violaciones": "Delitos/VIOLACIONES.shp",
-            "Robo a Pasajero en Microbús": "Delitos/ROBO A PASAJERO A BORDO DE MICROBUS.shp",
-            "Robo a Pasajero en Taxi": "Delitos/ROBO A PASAJERO A BORDO DE TAXI.shp",
-            "Robo a Pasajero en Metro": "Delitos/ROBO A PASAJERO A BORDO DEL METRO.shp",
-            "Robo a Cuentahabiente": "Delitos/ROBO A CUENTAHABIENTE.shp",
-            "Robo a Casa Habitación": "Delitos/ROBO A CASA HABITACIÓN .shp",
-            "Robo a Negocio con Violencia": "Delitos/ROBO A NEGOCIO CON VIOLENCIA.shp"
-        },
-        "Delitos con vehículos implicados": {
-            "Robo a Repartidor": "Delitos/ROBO A REPARTIDOR.shp",
-            "Robo a Transportista": "Delitos/ROBO A TRASPORTISTA.shp",
-            "Robo de Motocicleta con Violencia": "Delitos/ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
-            "Robo de Vehículo Particular con Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
-            "Robo de Vehículo Público sin Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
-            "Robo de Vehículo": "Delitos/ROBO DE VEHICULO.shp"
+        "Delitos": {
+            "Delitos a personas": {
+                "Homicidios": "Delitos/Homicidios.shp",
+                "Violaciones": "Delitos/VIOLACIONES.shp",
+                "Robo a Pasajero en Microbús": "Delitos/ROBO A PASAJERO A BORDO DE MICROBUS.shp",
+                "Robo a Pasajero en Taxi": "Delitos/ROBO A PASAJERO A BORDO DE TAXI.shp",
+                "Robo a Pasajero en Metro": "Delitos/ROBO A PASAJERO A BORDO DEL METRO.shp",
+                "Robo a Cuentahabiente": "Delitos/ROBO A CUENTAHABIENTE.shp",
+                "Robo a Casa Habitación": "Delitos/ROBO A CASA HABITACIÓN .shp",
+                "Robo a Negocio con Violencia": "Delitos/ROBO A NEGOCIO CON VIOLENCIA.shp"
+            },
+            "Delitos con vehículos implicados": {
+                "Robo a Repartidor": "Delitos/ROBO A REPARTIDOR.shp",
+                "Robo a Transportista": "Delitos/ROBO A TRASPORTISTA.shp",
+                "Robo de Motocicleta con Violencia": "Delitos/ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
+                "Robo de Vehículo Particular con Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
+                "Robo de Vehículo Público sin Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
+                "Robo de Vehículo": "Delitos/ROBO DE VEHICULO.shp"
+            }
         },
         "Socio-Demográfico": {
             "Índice de Desarrollo": "Socio demografico/alcd.shp",
@@ -185,79 +186,72 @@ if os.path.exists(shapefiles_dir):
         }
     }
 
-    # Iterate through the menus
-    for menu_name, layers in LAYER_CONFIG.items():
-        with st.sidebar.expander(menu_name, expanded=False):
-            for display_name, rel_path in layers.items():
-                full_path = os.path.join(shapefiles_dir, rel_path)
-                
-                # Check if file exists before showing checkbox (optional, but good UX)
-                if os.path.exists(full_path):
-                     show_layer = st.checkbox(display_name, value=False, key=full_path)
-                     
-                     if show_layer:
-                        gdf = load_and_process_shapefile(full_path)
-                        if gdf is not None and not gdf.empty:
-                            layer_color = colors[abs(hash(display_name)) % len(colors)]
-                            
-                            fg = folium.FeatureGroup(name=display_name)
-                            
-                            geom_type = gdf.geom_type.iloc[0]
-                            
-                            if geom_type == 'Point' or geom_type == 'MultiPoint':
-                                if len(gdf) > 2000:
-                                    st.warning(f"Capa '{display_name}' tiene muchos puntos ({len(gdf)}). Mostrando primeros 2000.")
-                                    gdf_to_plot = gdf.iloc[:2000]
-                                else:
-                                    gdf_to_plot = gdf
-                                    
-                                for idx, row in gdf_to_plot.iterrows():
-                                    if row.geometry is None:
-                                        continue
-                                        
-                                    # Handle different geometry types safely
-                                    try:
-                                        if row.geometry.geom_type == 'Point':
-                                            lat, lon = row.geometry.y, row.geometry.x
-                                        else:
-                                            # Use centroid for MultiPoint or other types
-                                            centroid = row.geometry.centroid
-                                            lat, lon = centroid.y, centroid.x
-                                    except AttributeError:
-                                        continue
-
-                                    tooltip_text = "<br>".join([f"<b>{col}:</b> {str(row[col])}" for col in gdf.columns[:5]])
-                                    folium.CircleMarker(
-                                        location=[lat, lon],
-                                        radius=5,
-                                        color=layer_color,
-                                        fill=True,
-                                        fill_color=layer_color,
-                                        fill_opacity=0.7,
-                                        tooltip=tooltip_text
-                                    ).add_to(fg)
-                            else:
-                                folium.GeoJson(
-                                    gdf,
-                                    name=display_name,
-                                    style_function=lambda x, color=layer_color: {
-                                        'color': color,
-                                        'weight': 2,
-                                        'fillOpacity': 0.4
-                                    },
-                                    tooltip=folium.GeoJsonTooltip(
-                                        fields=list(gdf.columns)[:5],
-                                        aliases=list(gdf.columns)[:5],
-                                        localize=True
-                                    )
-                                ).add_to(fg)
-                                
-                            fg.add_to(m)
+    # Function to render a layer
+    def render_layer(display_name, rel_path):
+        full_path = os.path.join(shapefiles_dir, rel_path)
+        if os.path.exists(full_path):
+            show_layer = st.checkbox(display_name, value=False, key=full_path)
+            if show_layer:
+                gdf = load_and_process_shapefile(full_path)
+                if gdf is not None and not gdf.empty:
+                    layer_color = colors[abs(hash(display_name)) % len(colors)]
+                    fg = folium.FeatureGroup(name=display_name)
+                    geom_type = gdf.geom_type.iloc[0]
+                    
+                    if geom_type == 'Point' or geom_type == 'MultiPoint':
+                        if len(gdf) > 2000:
+                            st.warning(f"Capa '{display_name}' tiene muchos puntos ({len(gdf)}). Mostrando primeros 2000.")
+                            gdf_to_plot = gdf.iloc[:2000]
                         else:
-                            st.error(f"Error cargando {display_name}")
+                            gdf_to_plot = gdf
+                            
+                        for idx, row in gdf_to_plot.iterrows():
+                            if row.geometry is None: continue
+                            try:
+                                if row.geometry.geom_type == 'Point':
+                                    lat, lon = row.geometry.y, row.geometry.x
+                                else:
+                                    centroid = row.geometry.centroid
+                                    lat, lon = centroid.y, centroid.x
+                            except AttributeError: continue
+                            tooltip_text = "<br>".join([f"<b>{col}:</b> {str(row[col])}" for col in gdf.columns[:5]])
+                            folium.CircleMarker(
+                                location=[lat, lon], radius=5, color=layer_color,
+                                fill=True, fill_color=layer_color, fill_opacity=0.7,
+                                tooltip=tooltip_text
+                            ).add_to(fg)
+                    else:
+                        folium.GeoJson(
+                            gdf, name=display_name,
+                            style_function=lambda x, color=layer_color: {
+                                'color': color, 'weight': 2, 'fillOpacity': 0.4
+                            },
+                            tooltip=folium.GeoJsonTooltip(
+                                fields=list(gdf.columns)[:5],
+                                aliases=list(gdf.columns)[:5],
+                                localize=True
+                            )
+                        ).add_to(fg)
+                    fg.add_to(m)
                 else:
-                    # File missing
-                    st.markdown(f"<span style='color: #d15c7a; font-size: 0.8rem;'>{display_name} (Archivo no encontrado)</span>", unsafe_allow_html=True)
+                    st.error(f"Error cargando {display_name}")
+        else:
+            st.markdown(f"<span style='color: #d15c7a; font-size: 0.8rem;'>{display_name} (Archivo no encontrado)</span>", unsafe_allow_html=True)
+
+    # Iterate through the menus
+    for menu_name, content in LAYER_CONFIG.items():
+        with st.sidebar.expander(menu_name, expanded=False):
+            # Check if this menu has nested submenus
+            # A simple way: check if the first value is a dict
+            first_val = next(iter(content.values()))
+            if isinstance(first_val, dict):
+                for sub_menu, layers in content.items():
+                    st.markdown(f"**{sub_menu}**")
+                    for display_name, rel_path in layers.items():
+                        render_layer(display_name, rel_path)
+            else:
+                for display_name, rel_path in content.items():
+                    render_layer(display_name, rel_path)
 
 # Render Map
 # returned_objects=[] optimizes performance by not sending data back to Python
