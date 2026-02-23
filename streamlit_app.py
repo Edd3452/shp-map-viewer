@@ -156,22 +156,22 @@ if os.path.exists(shapefiles_dir):
         },
         "Delitos": {
             "Delitos a personas": {
-                "Homicidios": "Delitos/Homicidios.shp",
-                "Violaciones": "Delitos/VIOLACIONES.shp",
-                "Robo a Pasajero en Microbús": "Delitos/ROBO A PASAJERO A BORDO DE MICROBUS.shp",
-                "Robo a Pasajero en Taxi": "Delitos/ROBO A PASAJERO A BORDO DE TAXI.shp",
-                "Robo a Pasajero en Metro": "Delitos/ROBO A PASAJERO A BORDO DEL METRO.shp",
-                "Robo a Cuentahabiente": "Delitos/ROBO A CUENTAHABIENTE.shp",
-                "Robo a Casa Habitación": "Delitos/ROBO A CASA HABITACIÓN .shp",
-                "Robo a Negocio con Violencia": "Delitos/ROBO A NEGOCIO CON VIOLENCIA.shp"
+                "Homicidios": "Delitos/Delitos a personas/Homicidios.shp",
+                "Violaciones": "Delitos/Delitos a personas/VIOLACIONES.shp",
+                "Robo a Cuentahabiente": "Delitos/Delitos a personas/ROBO A CUENTAHABIENTE.shp",
+                "Robo a Casa Habitación": "Delitos/Delitos a personas/ROBO A CASA HABITACIÓN .shp",
+                "Robo a Negocio con Violencia": "Delitos/Delitos a personas/ROBO A NEGOCIO CON VIOLENCIA.shp"
             },
             "Delitos con vehículos implicados": {
-                "Robo a Repartidor": "Delitos/ROBO A REPARTIDOR.shp",
-                "Robo a Transportista": "Delitos/ROBO A TRASPORTISTA.shp",
-                "Robo de Motocicleta con Violencia": "Delitos/ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
-                "Robo de Vehículo Particular con Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
-                "Robo de Vehículo Público sin Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
-                "Robo de Vehículo": "Delitos/ROBO DE VEHICULO.shp"
+                "Robo a Pasajero en Microbús": "Delitos/Delitos con vehiculos implicados/ROBO A PASAJERO A BORDO DE MICROBUS.shp",
+                "Robo a Pasajero en Taxi": "Delitos/Delitos con vehiculos implicados/ROBO A PASAJERO A BORDO DE TAXI.shp",
+                "Robo a Pasajero en Metro": "Delitos/Delitos con vehiculos implicados/ROBO A PASAJERO A BORDO DEL METRO.shp",
+                "Robo a Repartidor": "Delitos/Delitos con vehiculos implicados/ROBO A REPARTIDOR.shp",
+                "Robo a Transportista": "Delitos/Delitos con vehiculos implicados/ROBO A TRASPORTISTA.shp",
+                "Robo de Motocicleta con Violencia": "Delitos/Delitos con vehiculos implicados/ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
+                "Robo de Vehículo Particular con Violencia": "Delitos/Delitos con vehiculos implicados/ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
+                "Robo de Vehículo Público sin Violencia": "Delitos/Delitos con vehiculos implicados/ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
+                "Robo de Vehículo": "Delitos/Delitos con vehiculos implicados/ROBO DE VEHICULO.shp"
             }
         },
         "Socio-Demográfico": {
