@@ -174,15 +174,15 @@ if os.path.exists(shapefiles_dir):
                 "Robo de Vehículo": "Delitos/Delitos con vehiculos implicados/ROBO DE VEHICULO.shp"
             }
         },
-        "Socio-Demográfico": {
-            "ids_agen_cdmx": "Socio demografico/ids_ageb_cdmx.shp",
-            "Grado de Marginación": "Socio demografico/GradoMarginación.shp"
-        },
-        "Ni una menos": {
+        "Registros (Ni una menos)": {
             "Acoso y Agresión": "Ni una menos/Acoso y agresióin.shp",
             "Asaltos": "Ni una menos/Asaltos.shp",
             "Fraudes": "Ni una menos/Fraudes .shp",
             "Intento de Asalto": "Ni una menos/Intento de asalto.shp"
+        },
+        "Socio Demografícas": {
+            "ids_agen_cdmx": "Socio demografico/ids_ageb_cdmx.shp",
+            "Grado de Marginación": "Socio demografico/GradoMarginación.shp"
         }
     }
 
