@@ -49,7 +49,7 @@ with st.sidebar:
 
     st.header("Menús Disponibles")
     st.info("Seleccione las capas desde el menú desplegable.")
-    st.sidebar.write("Debug: Script updated at 11:45")
+    st.sidebar.write("v2.2 - Path sep: /")
 
 # Custom CSS for white background
 st.markdown('''
@@ -156,30 +156,30 @@ if os.path.exists(shapefiles_dir):
             "Centros de Justicia": "Social/Centros_de_justicia.shp"
         },
         "Delitos": {
-            "Homicidios": "Delitos\\Homicidios.shp",
-            "Robo a Casa Habitación": "Delitos\\ROBO A CASA HABITACIÓN .shp",
-            "Robo a Cuentahabiente": "Delitos\\ROBO A CUENTAHABIENTE.shp",
-            "Robo a Negocio con Violencia": "Delitos\\ROBO A NEGOCIO CON VIOLENCIA.shp",
-            "Robo a Pasajero en Microbús": "Delitos\\ROBO A PASAJERO A BORDO DE MICROBUS.shp",
-            "Robo a Pasajero en Taxi": "Delitos\\ROBO A PASAJERO A BORDO DE TAXI.shp",
-            "Robo a Pasajero en Metro": "Delitos\\ROBO A PASAJERO A BORDO DEL METRO.shp",
-            "Robo a Repartidor": "Delitos\\ROBO A REPARTIDOR.shp",
-            "Robo a Transportista": "Delitos\\ROBO A TRASPORTISTA.shp",
-            "Robo de Motocicleta con Violencia": "Delitos\\ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
-            "Robo de Vehículo Particular con Violencia": "Delitos\\ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
-            "Robo de Vehículo Público sin Violencia": "Delitos\\ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
-            "Robo de Vehículo": "Delitos\\ROBO DE VEHICULO.shp",
-            "Violaciones": "Delitos\\VIOLACIONES.shp"
+            "Homicidios": "Delitos/Homicidios.shp",
+            "Robo a Casa Habitación": "Delitos/ROBO A CASA HABITACIÓN .shp",
+            "Robo a Cuentahabiente": "Delitos/ROBO A CUENTAHABIENTE.shp",
+            "Robo a Negocio con Violencia": "Delitos/ROBO A NEGOCIO CON VIOLENCIA.shp",
+            "Robo a Pasajero en Microbús": "Delitos/ROBO A PASAJERO A BORDO DE MICROBUS.shp",
+            "Robo a Pasajero en Taxi": "Delitos/ROBO A PASAJERO A BORDO DE TAXI.shp",
+            "Robo a Pasajero en Metro": "Delitos/ROBO A PASAJERO A BORDO DEL METRO.shp",
+            "Robo a Repartidor": "Delitos/ROBO A REPARTIDOR.shp",
+            "Robo a Transportista": "Delitos/ROBO A TRASPORTISTA.shp",
+            "Robo de Motocicleta con Violencia": "Delitos/ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
+            "Robo de Vehículo Particular con Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
+            "Robo de Vehículo Público sin Violencia": "Delitos/ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
+            "Robo de Vehículo": "Delitos/ROBO DE VEHICULO.shp",
+            "Violaciones": "Delitos/VIOLACIONES.shp"
         },
         "Socio-Demográfico": {
             "Índice de Desarrollo": "Socio demografico/alcd.shp",
             "Grado de Marginación": "Socio demografico/GradoMarginación.shp"
         },
         "Ni una menos": {
-            "Acoso y Agresión": "Ni una menos\\Acoso y agresióin.shp",
-            "Asaltos": "Ni una menos\\Asaltos.shp",
-            "Fraudes": "Ni una menos\\Fraudes .shp",
-            "Intento de Asalto": "Ni una menos\\Intento de asalto.shp"
+            "Acoso y Agresión": "Ni una menos/Acoso y agresióin.shp",
+            "Asaltos": "Ni una menos/Asaltos.shp",
+            "Fraudes": "Ni una menos/Fraudes .shp",
+            "Intento de Asalto": "Ni una menos/Intento de asalto.shp"
         }
     }
 
