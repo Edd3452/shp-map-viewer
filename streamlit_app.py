@@ -175,7 +175,7 @@ if os.path.exists(shapefiles_dir):
             }
         },
         "Socio-Demográfico": {
-            "Índice de Desarrollo": "Socio demografico/alcd.shp",
+            "ids_agen_cdmx": "Socio demografico/ids_ageb_cdmx.shp",
             "Grado de Marginación": "Socio demografico/GradoMarginación.shp"
         },
         "Ni una menos": {
