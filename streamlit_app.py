@@ -50,6 +50,7 @@ with st.sidebar:
 
     st.header("Menús Disponibles")
     st.info("Seleccione las capas desde el menú desplegable.")
+    st.sidebar.write("Debug: Script updated at 11:45")
 
 # Custom CSS for white background
 st.markdown('''
@@ -172,9 +173,14 @@ if os.path.exists(shapefiles_dir):
             "Violaciones": "Delitos/VIOLACIONES.shp"
         },
         "Socio-Demográfico": {
-            "Índice de Desarrollo": "Socio demografico/alcd.shp", # Best guess for 'alcd'
-            "Grado de Marginación": "Socio demografico/GradoMarginación.shp",
-            # "Territorios de Paz": "Socio demografico/..." # Missing file
+            "Índice de Desarrollo": "Socio demografico/alcd.shp",
+            "Grado de Marginación": "Socio demografico/GradoMarginación.shp"
+        },
+        "Ni una menos": {
+            "Acoso y Agresión": "Ni una menos/Acoso y agresióin.shp",
+            "Asaltos": "Ni una menos/Asaltos.shp",
+            "Fraudes": "Ni una menos/Fraudes .shp",
+            "Intento de Asalto": "Ni una menos/Intento de asalto.shp"
         }
     }
 
