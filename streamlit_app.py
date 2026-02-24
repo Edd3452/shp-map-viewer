@@ -208,8 +208,8 @@ if os.path.exists(shapefiles_dir):
 
     LAYER_CONFIG = {
         "Sociales": {
-            "Bicicletas": "Social/Biciestacionamientos_Final.shp",
-            "Motos": "Social/Estacionamientos_Moto.shp",
+            "Bicicletas Estacionamientos": "Social/Biciestacionamientos_Final.shp",
+            "Motos Estacionamientos": "Social/Estacionamientos_Moto.shp",
             "Pilares": "Social/Pilares.shp",
             "UT": "Social/UT.shp",
             "Utopías": "Social/utopias.shp",
