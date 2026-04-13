@@ -160,6 +160,16 @@ st.markdown('''
 # Initialize Map
 m = folium.Map(location=[19.4326, -99.1332], zoom_start=11, tiles="CartoDB positron", control_scale=True)
 
+# Remove the focus outline (bounding box) that appears when clicking map elements
+css = """
+<style>
+    .leaflet-container .leaflet-interactive:focus {
+        outline: none;
+    }
+</style>
+"""
+m.get_root().html.add_child(folium.Element(css))
+
 # Function to render legend
 def render_legend(config_key):
     config = CHOROPLETH_CONFIG[config_key]
