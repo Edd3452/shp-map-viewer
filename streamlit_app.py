@@ -242,6 +242,7 @@ if os.path.exists(shapefiles_dir):
                 "Robo a Repartidor": "Delitos/Delitos con vehiculos implicados/ROBO A REPARTIDOR.shp",
                 "Robo a Transportista": "Delitos/Delitos con vehiculos implicados/ROBO A TRASPORTISTA.shp",
                 "Robo de Motocicleta con Violencia": "Delitos/Delitos con vehiculos implicados/ROBO DE MOTOCICLETA CON VIOLENCIA.shp",
+                "Robo de Motocicleta sin Violencia": "Delitos/Delitos con vehiculos implicados/ROBO DE MOTOCICLETA SIN VIOLENCIA.shp",
                 "Robo de Vehículo Particular con Violencia": "Delitos/Delitos con vehiculos implicados/ROBO DE VEHICULO DE SERVICIO PARTICULAR CON VIOLENCIA.shp",
                 "Robo de Vehículo Público sin Violencia": "Delitos/Delitos con vehiculos implicados/ROBO DE VEHICULO DE SERVICIO PÚBLICO SIN VIOLENCIA.shp",
                 "Robo de Vehículo": "Delitos/Delitos con vehiculos implicados/ROBO DE VEHICULO.shp"
