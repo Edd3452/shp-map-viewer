@@ -164,7 +164,10 @@ m = folium.Map(location=[19.4326, -99.1332], zoom_start=11, tiles="CartoDB posit
 css = """
 <style>
     .leaflet-container .leaflet-interactive:focus {
-        outline: none;
+        outline: none !important;
+    }
+    path.leaflet-interactive:focus {
+        outline: none !important;
     }
 </style>
 """
@@ -212,8 +215,7 @@ if os.path.exists(shapefiles_dir):
                     'weight': 1.5,
                     'fillOpacity': 0,
                     'dashArray': '5, 5'
-                },
-                tooltip="Límite Municipal"
+                }
             ).add_to(m)
 
     LAYER_CONFIG = {
