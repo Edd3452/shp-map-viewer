@@ -123,6 +123,10 @@ st.markdown('''
     [data-testid="stExpander"] details[open] > summary:hover {
         color: #ff4b4b !important;
     }
+
+    [data-testid="stSidebarNav"] {
+        display: none;
+    }
     
     /* Legend styling */
     .legend-container {
